@@ -1,0 +1,4 @@
+*.gcode.3mf
+*.gcode
+__pycache__/
+result.json
