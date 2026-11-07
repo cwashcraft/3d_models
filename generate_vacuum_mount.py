@@ -833,7 +833,7 @@ def write_3mf(filepath, triangles):
         for t in indexed_tris
     )
 
-    # Position on standard 256x256 Bambu build plate (centered at X=128, Y=128, Z=0)
+    # Position centered on Bambu A1 Mini 180x180 build plate (X=90, Y=90, Z=0) — also fits 256x256 plates
     model_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
   <metadata name="Title">Craftsman V20 Handheld Vacuum Wall Mount</metadata>
@@ -851,7 +851,7 @@ def write_3mf(filepath, triangles):
     </object>
   </resources>
   <build>
-    <item objectid="1" transform="1 0 0 0 1 0 0 0 1 128 128 0"/>
+    <item objectid="1" transform="1 0 0 0 1 0 0 0 1 90 90 0"/>
   </build>
 </model>"""
 
