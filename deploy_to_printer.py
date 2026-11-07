@@ -113,12 +113,13 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA"):
         tray_idx = "GFG00"
         fil_type = "PETG"
     else:
-        fil_name = "Bambu PLA Basic @BBL A1M"
-        tray_idx = "GFA00"
+        fil_name = "Bambu PLA Matte @BBL A1M"
+        tray_idx = "GFA01"
         fil_type = "PLA"
 
     filament = resolve_preset("filament", fil_name)
     filament["filament_settings_id"] = [fil_name]
+    filament["filament_colour"] = ["#8E9089"]
 
     m_path = os.path.join(tmp_dir, "machine.json")
     p_path = os.path.join(tmp_dir, "process.json")
@@ -221,19 +222,19 @@ def upload_via_ftps(printer_ip, access_code, local_filepath):
     remote_filename = os.path.basename(local_filepath)
     print(f"[3/3] Uploading {remote_filename} to Bambu Lab A1 Mini at {printer_ip}:990 ...")
 
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-
-    ftps = ImplicitFTP_TLS(context=ctx)
-    ftps.connect(host=printer_ip, port=990, timeout=15)
-    ftps.login(user="bblp", passwd=access_code)
-    ftps.prot_p()
-
-    with open(local_filepath, "rb") as fp:
-        ftps.storbinary(f"STOR {remote_filename}", fp)
-
-    ftps.quit()
+    subprocess.run(
+        [
+            "curl",
+            "-k",
+            "--ftp-ssl",
+            "--user",
+            f"bblp:{access_code}",
+            "-T",
+            local_filepath,
+            f"ftps://{printer_ip}:990/{remote_filename}",
+        ],
+        check=True,
+    )
     print(f"  -> Upload complete! '{remote_filename}' is now on your A1 Mini!")
     print("  -> On your A1 Mini touchscreen, tap 'Print Files' to start printing immediately.")
 
