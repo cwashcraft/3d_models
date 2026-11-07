@@ -96,6 +96,9 @@ xvfb-run -a bambu-studio \
        -T craftsman_v20_vacuum_mount.gcode.3mf \
        "ftps://<PRINTER_IP>:990/craftsman_v20_vacuum_mount.gcode.3mf"
      ```
+4. **Live MQTT Telemetry (`port 8883`) & Camera Snapshot Capture (`port 6000`) (`check_print_status.py`):**
+   - **MQTT Telemetry:** Connect via TLS to `<PRINTER_IP>:8883` (`username="bblp"`, `password="<ACCESS_CODE>"`), subscribe to `device/<SERIAL>/report`, and publish `{"pushing": {"sequence_id": "1", "command": "pushall", "version": 1, "push_target": 1}}` to `device/<SERIAL>/request` to receive `gcode_state`, `mc_percent`, `layer_num`, `mc_remaining_time`, and temperatures.
+   - **Camera JPEG Stream (`port 6000`):** Connect via TLS to `<PRINTER_IP>:6000` and send the 80-byte binary auth header (`struct.pack("<II8s32s32s", 0x40, 0x3000, b"", b"bblp", access_code.encode())`) to stream live MJPEG frames (`0xFFD8FF` .. `0xFFD9`) and attach them to `ntfy.sh` push notifications.
 
 ---
 

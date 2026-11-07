@@ -25,7 +25,8 @@ This wall hanger cradles the upper neck of the Craftsman V20 handheld vacuum rig
 | [`craftsman_v20_vacuum_mount.stl`](craftsman_v20_vacuum_mount.stl) | Watertight, 2-manifold binary **STL** mesh (`1,360` triangles). |
 | [`craftsman_v20_vacuum_mount.scad`](craftsman_v20_vacuum_mount.scad) | Parametric **OpenSCAD** source file. |
 | [`generate_vacuum_mount.py`](generate_vacuum_mount.py) | Standalone Python parametric generator (zero external dependencies) that builds the `.stl`, `.3mf`, `.scad`, and preview images. |
-| [`deploy_to_printer.py`](deploy_to_printer.py) | Automated build, headless Bambu Studio slicer (`v02.08.02.61`), and wireless FTPS uploader (`port 990`) to send pre-sliced `.gcode.3mf` files directly to a Bambu Lab A1 Mini. |
+| [`../scripts/deploy_to_printer.py`](../scripts/deploy_to_printer.py) | Shared repo script: headless Bambu Studio slicer (`v02.08.02.61`) and wireless FTPS uploader (`port 990`) to send pre-sliced `.gcode.3mf` files directly to a Bambu Lab A1 Mini. |
+| [`../scripts/check_print_status.py`](../scripts/check_print_status.py) | Shared repo script: live MQTT print telemetry checker (`port 8883`) + built-in camera snapshot grabber (`port 6000`) that pushes live photo notifications to `ntfy.sh`. |
 | [`craftsman_v20_vacuum_mount_preview.png`](craftsman_v20_vacuum_mount_preview.png) | Rendered 3D isometric preview image. |
 | [`craftsman_v20_vacuum_mount_preview.svg`](craftsman_v20_vacuum_mount_preview.svg) | Vector 3D isometric preview image. |
 | [`../KB.md`](../KB.md) | Shared knowledge base covering Bambu Lab A1 mini presets, MakerWorld `.3mf` requirements, and headless Bambu Studio CLI workflows. |
@@ -75,7 +76,7 @@ This automatically verifies that the mesh is watertight/2-manifold and regenerat
 You can also rebuild the 3D geometry, slice it headlessly with the official **Bambu Studio (`v02.08.02.61`)** CLI for the **Bambu Lab A1 mini** (`0.20mm Strength @BBL A1M`, `4` walls, `25%` Gyroid infill, `Textured PEI Plate`), and upload the pre-sliced `craftsman_v20_vacuum_mount.gcode.3mf` directly to your printer over Wi-Fi (FTPS port `990`) in a single command:
 
 ```bash
-python3 deploy_to_printer.py --ip <PRINTER_IP> --access-code <8_DIGIT_ACCESS_CODE> --filament PLA
+python3 ../scripts/deploy_to_printer.py --model-dir . --ip <PRINTER_IP> --access-code <8_DIGIT_ACCESS_CODE> --filament PLA
 ```
 
 - Use `--filament PLA` (defaults to `Bambu PLA Matte @BBL A1M` Gray) or `--filament PETG` (`Bambu PETG Basic @BBL A1M 0.4 nozzle`).
