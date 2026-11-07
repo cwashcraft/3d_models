@@ -1,4 +1,3 @@
-*.gcode.3mf
-*.gcode
+craftsman_v20_vacuum_mount.gcode.3mf
 __pycache__/
 result.json
