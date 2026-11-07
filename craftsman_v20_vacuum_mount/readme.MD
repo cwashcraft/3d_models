@@ -28,7 +28,7 @@ This wall hanger cradles the upper neck of the Craftsman V20 handheld vacuum rig
 | [`deploy_to_printer.py`](deploy_to_printer.py) | Automated build, headless Bambu Studio slicer (`v02.08.02.61`), and wireless FTPS uploader (`port 990`) to send pre-sliced `.gcode.3mf` files directly to a Bambu Lab A1 Mini. |
 | [`craftsman_v20_vacuum_mount_preview.png`](craftsman_v20_vacuum_mount_preview.png) | Rendered 3D isometric preview image. |
 | [`craftsman_v20_vacuum_mount_preview.svg`](craftsman_v20_vacuum_mount_preview.svg) | Vector 3D isometric preview image. |
-| [`KB.md`](KB.md) | Knowledge base covering Bambu Lab A1 mini presets, MakerWorld `.3mf` requirements, and headless Bambu Studio CLI workflows. |
+| [`../KB.md`](../KB.md) | Shared knowledge base covering Bambu Lab A1 mini presets, MakerWorld `.3mf` requirements, and headless Bambu Studio CLI workflows. |
 
 ---
 
