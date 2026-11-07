@@ -83,20 +83,6 @@ xvfb-run -a bambu-studio \
   craftsman_v20_vacuum_mount.stl
 ```
 
-### Important: Bambu Studio Version & A1 Mini G-Code Templates (`include` Array)
-1. **Merge `"include"` Templates as Well as `"inherits"`:**
-   - `Bambu Lab A1 mini 0.4 nozzle.json` inherits from `fdm_bbl_3dp_001_common.json` (which has X1/P1 `256 × 256 mm` G-code moves to `Y255`/`Y265`), and overrides the G-code via `"include": ["Bambu Lab A1 mini 0.4 nozzle template machine_start_gcode", ...]`.
-   - Always merge both `"inherits"` and `"include"` so the A1 Mini's `180 × 180 mm` G-code templates are used.
-2. **Use `v02.08.02.61` Schema for Cloud Slicer Compatibility:**
-   - Newer Bambu Studio releases (such as `v02.09.01.70`) add extra config keys that the MakerWorld / Bambu Handy cloud slicer rejects unless `--allow-newer-file` is enabled on the server.
-3. **Direct Wireless FTPS Deployment (`deploy_to_printer.py`):**
-   - To bypass cloud slicing completely, slice locally with `bambu-studio --slice 0 --export-3mf craftsman_v20_vacuum_mount.gcode.3mf` and upload directly to the A1 Mini's built-in FTPS server on port `990`:
-     ```bash
-     curl -k --ftp-ssl --user "bblp:<ACCESS_CODE>" \
-       -T craftsman_v20_vacuum_mount.gcode.3mf \
-       "ftps://<PRINTER_IP>:990/craftsman_v20_vacuum_mount.gcode.3mf"
-     ```
-
 ---
 
 ## 4. Parametric 3D Mesh Generation Guidelines (`generate_vacuum_mount.py`)

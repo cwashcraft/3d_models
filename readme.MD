@@ -27,6 +27,7 @@ This wall hanger cradles the upper neck of the Craftsman V20 handheld vacuum rig
 | [`generate_vacuum_mount.py`](generate_vacuum_mount.py) | Standalone Python parametric generator (zero external dependencies) that builds the `.stl`, `.3mf`, `.scad`, and preview images. |
 | [`craftsman_v20_vacuum_mount_preview.png`](craftsman_v20_vacuum_mount_preview.png) | Rendered 3D isometric preview image. |
 | [`craftsman_v20_vacuum_mount_preview.svg`](craftsman_v20_vacuum_mount_preview.svg) | Vector 3D isometric preview image. |
+| [`KB.md`](KB.md) | Knowledge base covering Bambu Lab A1 mini presets, MakerWorld `.3mf` requirements, and headless Bambu Studio CLI workflows. |
 
 ---
 
