@@ -7,6 +7,7 @@ Collection of custom parametric 3D-printable models, OpenSCAD sources, and Bambu
 | Model | Directory | Description |
 | :--- | :--- | :--- |
 | **Craftsman V20 Handheld Vacuum Wall Mount (`CMCVH001B`)** | [`craftsman_v20_vacuum_mount/`](craftsman_v20_vacuum_mount/) | Two-arm wall cradle with recessed inner ledges and retention hooks for the Craftsman V20 cordless handheld vacuum. |
+| **Tiny Jumping Spider (*Salticidae*)** | [`tiny_jumping_spider/`](tiny_jumping_spider/) | Cute miniature jumping spider with 8 sculpted eyes, fuzzy pedipalps, dorsal abdomen chevrons, and 8 round articulated legs. |
 
 ## Shared Scripts & Documentation
 
