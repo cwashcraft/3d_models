@@ -26,7 +26,7 @@ import tempfile
 import zipfile
 
 
-def resolve_bambu_presets(appimage_path, filament_choice="PLA"):
+def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=False):
     """Extracts and flattens the official Bambu Lab A1 mini presets from the AppImage."""
     tmp_dir = tempfile.mkdtemp(prefix="bambu_presets_")
     subprocess.run(
@@ -67,7 +67,23 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA"):
     process["wall_loops"] = "4"
     process["sparse_infill_density"] = "25%"
     process["sparse_infill_pattern"] = "gyroid"
-    process["enable_support"] = "0"
+
+    if enable_supports:
+        process["enable_support"] = "1"
+        process["support_type"] = "normal(auto)"
+        process["support_style"] = "snug"
+        process["support_on_build_plate_only"] = "1"
+        process["support_threshold_angle"] = "40"
+        process["support_top_z_distance"] = "0.24"
+        process["support_bottom_z_distance"] = "0.2"
+        process["support_object_xy_distance"] = "0.4"
+        process["support_interface_top_layers"] = "2"
+        process["support_interface_spacing"] = "0.4"
+        process["brim_type"] = "outer_only"
+        process["brim_width"] = "5"
+        process["brim_object_gap"] = "0.12"
+    else:
+        process["enable_support"] = "0"
 
     if filament_choice.upper() == "PETG":
         fil_name = "Bambu PETG Basic @BBL A1M 0.4 nozzle"
@@ -95,7 +111,7 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA"):
     return tmp_dir, m_path, p_path, f_path, fil_name, tray_idx, fil_type
 
 
-def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA"):
+def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA", enable_supports=False):
     # Check if a generator script (generate_*.py) exists in model_dir
     gen_scripts = sorted(glob.glob(os.path.join(model_dir, "generate_*.py")))
     if gen_scripts:
@@ -115,9 +131,10 @@ def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA"):
     sliced_3mf = os.path.join(model_dir, f"{base_name}.gcode.3mf")
     png_candidates = sorted(glob.glob(os.path.join(model_dir, "*preview*.png")))
 
-    print(f"[2/3] Slicing '{os.path.basename(stl_path)}' for Bambu Lab A1 mini ({filament_choice.upper()}, 4 walls, 25% Gyroid)...")
+    sup_str = " + Breakaway Supports & 5mm Brim" if enable_supports else ""
+    print(f"[2/3] Slicing '{os.path.basename(stl_path)}' for Bambu Lab A1 mini ({filament_choice.upper()}, 4 walls, 25% Gyroid{sup_str})...")
     tmp_dir, m_path, p_path, f_path, fil_name, tray_idx, fil_type = resolve_bambu_presets(
-        appimage_path, filament_choice
+        appimage_path, filament_choice, enable_supports=enable_supports
     )
 
     subprocess.run(
@@ -217,13 +234,15 @@ def main():
     parser.add_argument("--ip", default=os.environ.get("BAMBU_IP"), help="A1 Mini LAN IP address")
     parser.add_argument("--access-code", default=os.environ.get("BAMBU_ACCESS_CODE"), help="A1 Mini 8-digit access code")
     parser.add_argument("--filament", default=os.environ.get("BAMBU_FILAMENT", "PLA"), choices=["PLA", "PETG", "pla", "petg"], help="Filament preset (PLA or PETG)")
+    parser.add_argument("--supports", action="store_true", help="Enable breakaway supports and 5mm outer brim")
     parser.add_argument("--slice-only", action="store_true", help="Build and slice locally without uploading to printer")
     args = parser.parse_args()
 
     model_dir = os.path.abspath(args.model_dir)
     appimage_path = "/home/droid/BambuStudio.AppImage"
+    use_supports = args.supports or ("jumping_spider" in os.path.basename(model_dir))
 
-    sliced_3mf = build_and_slice(model_dir, args.stl, appimage_path, args.filament)
+    sliced_3mf = build_and_slice(model_dir, args.stl, appimage_path, args.filament, enable_supports=use_supports)
 
     if args.slice_only or not args.ip or not args.access_code:
         if not args.slice_only:
