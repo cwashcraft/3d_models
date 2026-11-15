@@ -3,7 +3,7 @@
 // 8 Asymmetric Starfleet Deltas (matched to Delta-shield.png) repeating nose-to-tail
 // ============================================================================
 
-inner_diameter      = 16.51;
+inner_diameter      = 17.05;
 band_width          = 7.0;
 base_wall_thickness = 2.0;
 num_deltas          = 8;

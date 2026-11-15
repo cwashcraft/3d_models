@@ -37,8 +37,8 @@ import zlib
 # ==============================================================================
 PARAMS = {
     # Ring Size & Band Profile Parameters
-    "us_ring_size": 6.0,            # US Ring Size 6
-    "inner_diameter": 16.51,        # Standard US Size 6 inner diameter at center of band (mm)
+    "us_ring_size": 6.5,            # US Ring Size 6.5 (16.92 mm standard + 0.13 mm FDM bore compensation)
+    "inner_diameter": 17.05,        # Calibrated US Size 6.5 inner diameter at center of band (mm)
     "band_width": 7.0,              # Total ring width / print height along Z (mm)
     "base_wall_thickness": 2.00,    # Base band radial wall thickness at center before Delta relief (mm)
     "inner_comfort_bevel": 1.25,    # Deep comfort-fit rounded inner bevel height at top & bottom rims (mm)

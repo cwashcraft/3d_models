@@ -1,14 +1,14 @@
-# Star Trek Delta Raised-Relief TPU Ring (US Size 6 — 7.0 mm Width)
+# Star Trek Delta Raised-Relief TPU Ring (US Size 6.5 — 7.0 mm Width)
 
-A custom, 3D-printable flexible **TPU comfort-fit ring** (`US Ring Size 6`, `16.51 mm` inner diameter, `7.0 mm` band width) featuring **8 raised, rounded Star Trek Starfleet Delta shields** (matched to `Delta-shield.png`) repeating nose-to-tail along the circumference of the band, optimized for support-free printing on the **Bambu Lab A1 mini**.
+A custom, 3D-printable flexible **TPU comfort-fit ring** (`US Ring Size 6.5`, `17.05 mm` calibrated inner diameter for `16.92 mm` standard Size 6.5 finger fit, `7.0 mm` band width) featuring **8 raised, rounded Star Trek Starfleet Delta shields** (matched to `Delta-shield.png`) repeating nose-to-tail along the circumference of the band, optimized for support-free printing on the **Bambu Lab A1 mini**.
 
 ![3D Model Preview](star_trek_delta_ring_preview.png)
 
 ## Overview & Design Features
 
-- **Tailored for US Ring Size 6 (`16.51 mm` ID) & `7.0 mm` Band Width with Comfort-Fit Bevelled Inside Edges:**
-  - Engineered with a `16.51 mm` nominal inner diameter (`R_in = 8.255 mm`), generous `1.25 mm × 0.75 mm` rounded comfort-fit inside bevels at both top and bottom rims (`Z = 0` and `Z = 7.0 mm`), plus a continuous `0.15 mm` convex comfort-fit interior curve so the ring slides smoothly over the knuckle with zero sharp edges.
-  - `2.00 mm` base band radial thickness (`20.51 mm` base outer diameter) framed by `0.85 mm` rounded outer rim edges and subtle recessed border grooves.
+- **Tailored for US Ring Size 6.5 (`17.05 mm` Calibrated ID) & `7.0 mm` Band Width with Comfort-Fit Bevelled Inside Edges:**
+  - Engineered with a `17.05 mm` nominal inner diameter (`16.92 mm` standard US Size 6.5 + `0.13 mm` FDM inner-bore compensation), generous `1.25 mm × 0.75 mm` rounded comfort-fit inside bevels at both top and bottom rims (`Z = 0` and `Z = 7.0 mm`), plus a continuous `0.15 mm` convex comfort-fit interior curve so the ring slides smoothly over the knuckle with zero sharp edges.
+  - `2.00 mm` base band radial thickness (`21.05 mm` base outer diameter) framed by `0.85 mm` rounded outer rim edges and subtle recessed border grooves.
 - **Raised & Rounded Starfleet Delta Pattern Repeating Long-Wise (`8` Nose-to-Tail Deltas):**
   - Features `8` asymmetrical **Star Trek Starfleet Delta shields** (`7.80 mm` length × `4.90 mm` wing span, `~1.6:1` aspect ratio matched to `Delta-shield.png`) oriented horizontally (nose-to-tail) in a continuous loop around the circumference.
   - Each Delta rises `+0.90 mm` above the base band (`21.47 mm` peak outer diameter) with a smooth, pillowed elliptical-dome 3D cross-section.
