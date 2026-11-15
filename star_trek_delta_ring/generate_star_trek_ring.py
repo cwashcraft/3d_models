@@ -38,11 +38,12 @@ import zlib
 PARAMS = {
     # Ring Size & Band Profile Parameters
     "us_ring_size": 6.0,            # US Ring Size 6
-    "inner_diameter": 16.51,        # Standard US Size 6 inner diameter (mm)
+    "inner_diameter": 16.51,        # Standard US Size 6 inner diameter at center of band (mm)
     "band_width": 7.0,              # Total ring width / print height along Z (mm)
-    "base_wall_thickness": 1.85,    # Base band radial wall thickness before raised relief (mm)
-    "inner_comfort_bevel": 0.60,    # Comfort-fit rounded inner edge radius at Z=0 and Z=7mm (mm)
-    "outer_rim_bevel": 0.65,        # Smooth outer rim rounding at Z=0 and Z=7mm (mm)
+    "base_wall_thickness": 2.00,    # Base band radial wall thickness at center before Delta relief (mm)
+    "inner_comfort_bevel": 1.25,    # Deep comfort-fit rounded inner bevel height at top & bottom rims (mm)
+    "inner_bevel_radial": 0.75,     # Radial depth of comfort-fit inside edge bevel (mm, 31-deg self-supporting)
+    "outer_rim_bevel": 0.85,        # Smooth outer rim rounding height at Z=0 and Z=7mm (mm)
 
     # Raised & Rounded Star Trek Delta Pattern Parameters (Matched to Delta-shield.png)
     "num_deltas": 8,                # Number of nose-to-tail Deltas repeating around circumference
@@ -182,6 +183,7 @@ def build_star_trek_ring_mesh(p):
     base_t = p["base_wall_thickness"]
     r_base_out = r_in_nom + base_t
     c_in = p["inner_comfort_bevel"]
+    r_bevel_in = p["inner_bevel_radial"]
     c_out = p["outer_rim_bevel"]
 
     # High-resolution structured toroidal grid:
@@ -200,28 +202,29 @@ def build_star_trek_ring_mesh(p):
     n_rim = 8
 
     def inner_radius_at_z(z):
-        # Comfort-fit rounded inner bore: slightly flared at Z=0 and Z=band_w for smooth finger entry,
-        # plus subtle central comfort crown
+        # Jeweler's comfort-fit interior bore + generous bevelled inside edges at Z=0 and Z=band_w:
+        #   1. Continuous 0.15 mm convex comfort-fit barrel curve across the 7.0 mm width
+        #   2. Smooth 1.25 mm x 0.75 mm rounded inside bevel at both top and bottom rims
+        #      (self-supporting ~31 deg angle from vertical for clean support-free TPU printing)
         dz_edge = min(z, band_w - z)
         if dz_edge < c_in:
             u = (c_in - dz_edge) / c_in
-            bevel = 0.38 * (u * u)
+            bevel = r_bevel_in * (0.45 * u + 0.55 * (u * u))
         else:
             bevel = 0.0
-        # Gentle 0.06 mm comfort-fit inner barrel curve
         mid_t = (z - 0.5 * band_w) / (0.5 * band_w)
-        comfort_curve = 0.06 * (mid_t * mid_t)
+        comfort_curve = 0.15 * (mid_t * mid_t)
         return r_in_nom + bevel + comfort_curve
 
     def base_outer_radius_at_z(z):
         dz_edge = min(z, band_w - z)
         if dz_edge < c_out:
             u = (c_out - dz_edge) / c_out
-            rim_drop = 0.42 * (u * u)
+            rim_drop = 0.45 * (u * u)
         else:
             rim_drop = 0.0
-        # Subtle recessed frame groove at z = 0.82 mm and z = band_w - 0.82 mm framing the Delta track
-        groove_dist = min(abs(z - 0.82), abs(z - (band_w - 0.82)))
+        # Subtle recessed frame groove at z = 0.85 mm and z = band_w - 0.85 mm framing the Delta track
+        groove_dist = min(abs(z - 0.85), abs(z - (band_w - 0.85)))
         groove = 0.10 * math.exp(-((groove_dist / 0.18) ** 2))
         return r_base_out - rim_drop - groove
 

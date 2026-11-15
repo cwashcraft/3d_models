@@ -5,7 +5,7 @@
 
 inner_diameter      = 16.51;
 band_width          = 7.0;
-base_wall_thickness = 1.85;
+base_wall_thickness = 2.0;
 num_deltas          = 8;
 delta_length        = 7.8;
 delta_wing_span     = 4.9;
