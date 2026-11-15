@@ -109,6 +109,15 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
     process["elefant_foot_compensation"] = "0.08"
     if fil_type == "PLA":
         process["wall_loops"] = "2"
+        # Add an outer + inner brim and warm 65C PEI bed so small keycap skirts & central MX stem posts
+        # stay firmly anchored to the Textured PEI plate and never detach during travel or Z-hop!
+        process["brim_type"] = "outer_and_inner"
+        process["brim_width"] = "4"
+        process["brim_object_gap"] = "0.1"
+        process["initial_layer_speed"] = "25"
+        process["initial_layer_infill_speed"] = "45"
+        filament["textured_plate_temp"] = ["65"]
+        filament["textured_plate_temp_initial_layer"] = ["65"]
 
     if fil_type == "TPU":
         # Anti-stringing TPU optimizations for lattice/mesh geometry on A1 mini:
