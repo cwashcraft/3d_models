@@ -55,9 +55,9 @@ PARAMS = {
     "icon_top_offset": 0.60,        # Height of blue icon relief above the highest rim (10.00 -> 10.60 mm)
     "base_corner_radius": 1.40,     # Outer corner fillet radius at Z = 0 (mm)
     "top_corner_radius": 1.15,      # Outer corner fillet radius at top deck (mm)
-    "skirt_wall_thickness": 1.50,   # Outer skirt wall thickness at base (mm)
-    "cavity_vault_start_z": 3.80,   # Height where internal cavity ceiling starts vaulting inward (mm)
-    "cavity_ceiling_z": 6.80,       # Maximum height of internal cavity ceiling below solid deck (mm)
+    "skirt_wall_thickness": 1.68,   # Outer skirt wall thickness (1.68 mm = exact 4 perimeters with zero gap-fill!)
+    "cavity_vault_start_z": 3.40,   # Height where internal cavity ceiling starts vaulting inward (mm)
+    "cavity_ceiling_z": 6.40,       # Maximum height of internal cavity ceiling below solid deck (mm)
 
     # Wooting Lekker V2 / Cherry MX Cross-Stem Parameters
     "stem_boss_diameter": 5.80,     # Central cylindrical stem post outer diameter (clears Lekker V2 shroud with wide bed footprint)

@@ -66,12 +66,40 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
     machine["printer_settings_id"] = "Bambu Lab A1 mini 0.4 nozzle"
     machine["curr_bed_type"] = "Textured PEI Plate"
 
-    process = resolve_preset("process", "0.20mm Strength @BBL A1M")
-    process["print_settings_id"] = "0.20mm Strength @BBL A1M"
-    process["curr_bed_type"] = "Textured PEI Plate"
-    process["wall_loops"] = "4"
-    process["sparse_infill_density"] = "25%"
-    process["sparse_infill_pattern"] = "gyroid"
+    if filament_choice.upper() == "PLA":
+        process = resolve_preset("process", "0.16mm Optimal @BBL A1M")
+        process["print_settings_id"] = "0.16mm Optimal @BBL A1M"
+        process["curr_bed_type"] = "Textured PEI Plate"
+        process["wall_loops"] = "2"
+        process["sparse_infill_density"] = "20%"
+        process["sparse_infill_pattern"] = "gyroid"
+        process["wall_generator"] = "arachne"
+        # MakerWorld upright keycap profile best practices for A1 mini:
+        # 1. Zero-gap 7mm outer + inner brim + 0.20mm/0.50mm slow first layer (20 mm/s) on 65C PEI plate
+        process["elefant_foot_compensation"] = "0"
+        process["brim_type"] = "outer_and_inner"
+        process["brim_width"] = "7"
+        process["brim_object_gap"] = "0"
+        process["initial_layer_print_height"] = "0.20"
+        process["initial_layer_line_width"] = "0.50"
+        process["initial_layer_speed"] = "20"
+        process["initial_layer_infill_speed"] = "35"
+        # 2. Throttled wall speeds (50 mm/s outer / 70 mm/s inner) so high-speed jerk never knocks loose a keycap
+        process["outer_wall_speed"] = "50"
+        process["inner_wall_speed"] = "70"
+        process["sparse_infill_speed"] = "80"
+        process["internal_solid_infill_speed"] = "60"
+        process["gap_infill_speed"] = "40"
+        process["top_surface_speed"] = "40"
+        process["reduce_crossing_wall"] = "1"
+        process["max_travel_detour_distance"] = "100%"
+    else:
+        process = resolve_preset("process", "0.20mm Strength @BBL A1M")
+        process["print_settings_id"] = "0.20mm Strength @BBL A1M"
+        process["curr_bed_type"] = "Textured PEI Plate"
+        process["wall_loops"] = "4"
+        process["sparse_infill_density"] = "25%"
+        process["sparse_infill_pattern"] = "gyroid"
 
     if enable_supports:
         process["enable_support"] = "1"
@@ -106,18 +134,12 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
     filament = resolve_preset("filament", fil_name)
     filament["filament_settings_id"] = [fil_name]
     filament["filament_colour"] = ["#1E1E20" if fil_type == "TPU" else "#8E9089"]
-    process["elefant_foot_compensation"] = "0.08"
     if fil_type == "PLA":
-        process["wall_loops"] = "2"
-        # Add an outer + inner brim and warm 65C PEI bed so small keycap skirts & central MX stem posts
-        # stay firmly anchored to the Textured PEI plate and never detach during travel or Z-hop!
-        process["brim_type"] = "outer_and_inner"
-        process["brim_width"] = "4"
-        process["brim_object_gap"] = "0.1"
-        process["initial_layer_speed"] = "25"
-        process["initial_layer_infill_speed"] = "45"
         filament["textured_plate_temp"] = ["65"]
         filament["textured_plate_temp_initial_layer"] = ["65"]
+        filament["Close_fan_the_first_x_layers"] = ["2"]
+        filament["slow_down_layer_time"] = ["12"]
+        filament["slow_down_min_speed"] = ["20"]
 
     if fil_type == "TPU":
         # Anti-stringing TPU optimizations for lattice/mesh geometry on A1 mini:
@@ -432,7 +454,7 @@ def main():
     use_supports = args.supports or ("jumping_spider" in os.path.basename(model_dir))
     pause_z = args.pause_z
     if pause_z is None and "keycap" in os.path.basename(model_dir):
-        pause_z = 10.20
+        pause_z = 10.12
     use_ams = (args.filament.upper() != "TPU") and (pause_z is None)
 
     if args.print_only:

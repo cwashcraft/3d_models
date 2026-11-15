@@ -31,13 +31,15 @@ A custom 3D-printable 4-keycap arrow cluster replacement set (`Cube`, `Ship`, `B
 | Parameter | Value |
 | :--- | :--- |
 | **Printer** | Bambu Lab A1 Mini (`0.4 mm` nozzle, Textured PEI Plate) |
-| **Filament 1 (Start, Layers 1–50)** | **Bambu PLA Matte — Gray** (`Z = 0.00 – 10.00 mm`) |
-| **Filament Swap Pause** | **Layer 51 (`Z = 10.20 mm`)** — Automatic `M400 U1` pause injected |
-| **Filament 2 (Resume, Layers 51–53)** | **Bambu PLA Basic — Blue** (`Z = 10.20 – 10.60 mm`) |
-| **Nozzle Temperature** | Official Bambu `220 °C` (`220 °C` initial layer, `0.8 mm` retraction, `0.4 mm` Z-hop) |
-| **Wall Generator** | Arachne (variable line width for crisp icon corners & thin details) |
-| **Total Print Time** | ~34 minutes (`28m 03s` model printing + bed leveling) |
-| **Total Filament Used** | `7.16 g` (`2.26 m`) across all 4 keycaps |
+| **Layer Height / Preset** | **`0.16 mm Optimal @BBL A1M`** (`0.20 mm` first layer, MakerWorld keycap standard) |
+| **Filament 1 (Start, Layers 1–62)** | **Bambu PLA Matte — Gray** (`Z = 0.00 – 9.96 mm`) |
+| **Filament Swap Pause** | **Layer 63 (`Z = 10.12 mm`)** — Automatic `M400 U1` pause injected |
+| **Filament 2 (Resume, Layers 63–65)** | **Bambu PLA Basic — Blue** (`Z = 10.12 – 10.44 mm`) |
+| **Nozzle & Bed Temp** | Official Bambu `220 °C` nozzle, **`65 °C` Textured PEI bed** (fan off first 2 layers) |
+| **Brim & Adhesion** | **`7 mm` Outer + Inner Brim (`0.0 mm` gap)**, `0.50 mm` first-layer line width @ `20 mm/s` |
+| **Speeds & Wall Generator** | **Arachne** variable wall width, **`50 mm/s` outer wall / `70 mm/s` inner wall** (`12 s` min layer time) |
+| **Total Print Time** | ~51 minutes (`45m 06s` model printing + bed leveling) |
+| **Total Filament Used** | `7.47 g` (`2.35 m`) across all 4 keycaps |
 
 ---
 
