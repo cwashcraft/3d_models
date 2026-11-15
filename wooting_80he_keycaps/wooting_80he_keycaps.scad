@@ -10,10 +10,10 @@ front_height        = 8.4;
 back_height         = 10.0;
 top_shift_y         = -0.65;
 dish_depth_x        = 0.72;
-stem_boss_diameter  = 5.55;
-cross_span          = 4.24;
-cross_slot_x        = 1.34;
-cross_slot_y        = 1.38;
+stem_boss_diameter  = 5.8;
+cross_span          = 4.18;
+cross_slot_x        = 1.32;
+cross_slot_y        = 1.36;
 cross_depth         = 4.6;
 grid_pitch          = 21.0;
 

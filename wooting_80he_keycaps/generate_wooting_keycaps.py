@@ -60,12 +60,12 @@ PARAMS = {
     "cavity_ceiling_z": 6.80,       # Maximum height of internal cavity ceiling below solid deck (mm)
 
     # Wooting Lekker V2 / Cherry MX Cross-Stem Parameters
-    "stem_boss_diameter": 5.55,     # Central cylindrical stem post outer diameter (clears Lekker V2 shroud)
-    "cross_span": 4.24,             # Total '+' cross slot width/height (mm)
-    "cross_slot_x": 1.34,           # Horizontal bar slot thickness (mm, along X)
-    "cross_slot_y": 1.38,           # Vertical bar slot thickness (mm, along Y)
+    "stem_boss_diameter": 5.80,     # Central cylindrical stem post outer diameter (clears Lekker V2 shroud with wide bed footprint)
+    "cross_span": 4.18,             # Total '+' cross slot width/height (mm)
+    "cross_slot_x": 1.32,           # Horizontal bar slot thickness (mm, along X)
+    "cross_slot_y": 1.36,           # Vertical bar slot thickness (mm, along Y)
     "cross_depth": 4.60,            # Depth of '+' cross slot from Z = 0 upward (mm)
-    "cross_entry_chamfer": 0.42,    # 45-deg bottom entry bevel on '+' slot & skirt rim (mm)
+    "cross_entry_chamfer": 0.0,     # Keep bottom of '+' stem post full-thickness on Layer 1 to avoid tiny dots & retraction clogs!
 
     # 2x2 Array Layout & Icon Sizing
     "grid_pitch": 21.00,            # Center-to-center spacing between the 4 keycaps (mm)
@@ -321,12 +321,6 @@ def single_keycap_sdf(x_loc, y_loc, z, p, icon_sdf_info):
     half_wy = 0.5 * (p["base_width"] + (p["top_width_y"] - p["base_width"]) * profile_curve)
     cy = p["top_shift_y"] * profile_curve
     r_corn = p["base_corner_radius"] + (p["top_corner_radius"] - p["base_corner_radius"]) * t_z
-
-    # Bottom outer elephant-foot chamfer (0.20 mm at Z = 0)
-    if z < 0.28:
-        inset = 0.20 * (1.0 - z / 0.28)
-        half_wx -= inset
-        half_wy -= inset
 
     # Sculpted sloped + cylindrical concave top surface height Z_top(x, y)
     z_top = keycap_top_surface_z(x_loc, y_loc, p)
@@ -836,17 +830,17 @@ for (gx = [-0.5, 0.5])
 
 def compute_keycap_albedo_and_spec(x, y, z, nx, ny, nz, p):
     """
-    Computes a realistic 2-Tone PLA Matte appearance for the preview renders:
-      - Color 1 (Z <= back_height): Matte White PLA Matte keycap body & MX stems
-      - Color 2 (Z > back_height + 0.05): Crisp Matte Blue PLA Matte raised Geometry Dash icons
+    Computes a realistic 2-Tone PLA Matte Gray + PLA Basic Blue appearance for the preview renders:
+      - Color 1 (Z <= back_height): Matte Ash/Slate Gray PLA Matte keycap body & MX stems
+      - Color 2 (Z > back_height + 0.05): Crisp Blue PLA Basic raised Geometry Dash icons
     """
     if z > p["back_height"] + 0.05:
-        # Color 2 (After filament change pause at Z = 10.20 mm): Matte Marine/Sky Blue PLA Matte
-        return (28.0, 122.0, 232.0), 22.0, 10.0
+        # Color 2 (After filament change pause at Z = 10.20 mm): Blue PLA Basic
+        return (28.0, 126.0, 240.0), 34.0, 14.0
     if z < 3.5 and abs(nz) < 0.5 and (abs(x) < 15.0 and abs(y) < 15.0):
-        return (218.0, 224.0, 232.0), 14.0, 8.0
-    # Color 1 (Base keycap body): Matte Ivory/Arctic White PLA Matte
-    return (242.0, 244.0, 248.0), 18.0, 8.0
+        return (118.0, 122.0, 126.0), 14.0, 8.0
+    # Color 1 (Base keycap body): Matte Gray PLA Matte
+    return (142.0, 145.0, 149.0), 18.0, 8.0
 
 
 def write_preview_svg(filepath, triangles, p):
