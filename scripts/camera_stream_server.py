@@ -12,7 +12,7 @@ import ssl
 import struct
 
 PRINTER_IP = os.environ.get("BAMBU_IP", "192.168.1.191")
-ACCESS_CODE = os.environ.get("BAMBU_ACCESS_CODE", "13929394")
+ACCESS_CODE = os.environ.get("BAMBU_ACCESS_CODE", "76646398")
 PORT = int(os.environ.get("STREAM_PORT", "8080"))
 
 

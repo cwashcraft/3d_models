@@ -18,11 +18,16 @@ Usage:
 
 import argparse
 import glob
+import hashlib
 import json
 import os
+import socket
+import ssl
+import struct
 import subprocess
 import sys
 import tempfile
+import time
 import zipfile
 
 
@@ -89,6 +94,10 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
         fil_name = "Bambu PETG Basic @BBL A1M 0.4 nozzle"
         tray_idx = "GFG00"
         fil_type = "PETG"
+    elif filament_choice.upper() == "TPU":
+        fil_name = "Bambu TPU 95A @BBL A1M"
+        tray_idx = "GFU01"
+        fil_type = "TPU"
     else:
         fil_name = "Bambu PLA Matte @BBL A1M"
         tray_idx = "GFA01"
@@ -96,7 +105,42 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
 
     filament = resolve_preset("filament", fil_name)
     filament["filament_settings_id"] = [fil_name]
-    filament["filament_colour"] = ["#8E9089"]
+    filament["filament_colour"] = ["#1E1E20" if fil_type == "TPU" else "#8E9089"]
+
+    if fil_type == "TPU":
+        # Anti-stringing TPU optimizations for lattice/mesh geometry on A1 mini:
+        # 1. Route travel moves inside solid walls instead of crossing open cutouts/bore
+        process["reduce_crossing_wall"] = "1"
+        process["max_travel_detour_distance"] = "100%"
+        # 2. Use Arachne variable-width walls to eliminate tiny gap-fill squirts & extra retractions
+        process["wall_generator"] = "arachne"
+        process["seam_position"] = "nearest"
+        process["role_base_wipe_speed"] = "0"
+        process["wipe_speed"] = "100%"
+        # 3. Disable Z-hop (lifting vertically off molten TPU pulls elastic strings across cutouts)
+        machine["z_hop"] = ["0"]
+        machine["z_hop_types"] = ["Normal Lift"]
+        filament["filament_z_hop"] = ["0"]
+        filament["filament_z_hop_types"] = ["Normal Lift"]
+        # 4. Stronger, faster direct-drive retraction + 70% fast pre-wipe retraction
+        machine["retraction_length"] = ["1.2"]
+        machine["retraction_speed"] = ["35"]
+        machine["deretraction_speed"] = ["25"]
+        machine["retract_before_wipe"] = ["70%"]
+        machine["wipe"] = ["1"]
+        machine["wipe_distance"] = ["2"]
+        machine["retraction_minimum_travel"] = ["0.8"]
+        filament["filament_retraction_length"] = ["1.2"]
+        filament["filament_retraction_speed"] = ["35"]
+        filament["filament_deretraction_speed"] = ["25"]
+        filament["filament_retract_before_wipe"] = ["70%"]
+        filament["filament_wipe"] = ["1"]
+        filament["filament_wipe_distance"] = ["2"]
+        filament["filament_retraction_minimum_travel"] = ["0.8"]
+        # 5. Lower nozzle temperature (215C print / 220C first layer) & controlled volumetric flow
+        filament["nozzle_temperature"] = ["215"]
+        filament["nozzle_temperature_initial_layer"] = ["220"]
+        filament["filament_max_volumetric_speed"] = ["3.2"]
 
     m_path = os.path.join(tmp_dir, "machine.json")
     p_path = os.path.join(tmp_dir, "process.json")
@@ -114,7 +158,8 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
 def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA", enable_supports=False):
     # Check if a generator script (generate_*.py) exists in model_dir
     gen_scripts = sorted(glob.glob(os.path.join(model_dir, "generate_*.py")))
-    if gen_scripts:
+    existing_stls = sorted(glob.glob(os.path.join(model_dir, "*.stl")))
+    if gen_scripts and (not existing_stls or os.path.getmtime(gen_scripts[0]) > os.path.getmtime(existing_stls[0])):
         print(f"[1/3] Running generator script: {os.path.basename(gen_scripts[0])}...")
         subprocess.run([sys.executable, gen_scripts[0]], check=True)
 
@@ -137,6 +182,8 @@ def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA", e
         appimage_path, filament_choice, enable_supports=enable_supports
     )
 
+    run_env = os.environ.copy()
+    run_env["APPIMAGE_EXTRACT_AND_RUN"] = "1"
     subprocess.run(
         [
             "xvfb-run",
@@ -155,6 +202,7 @@ def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA", e
             sliced_3mf,
             stl_path,
         ],
+        env=run_env,
         check=True,
     )
 
@@ -186,11 +234,13 @@ def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA", e
     s_info = s_info.replace('key="printer_model_id" value=""', 'key="printer_model_id" value="N1"')
     items["Metadata/slice_info.config"] = s_info.encode("utf-8")
 
-    with zipfile.ZipFile(sliced_3mf, "w", compression=zipfile.ZIP_DEFLATED) as zout:
+    with zipfile.ZipFile(sliced_3mf, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zout:
         for name, data in items.items():
+            if name == "3D/Objects/object_1.model":
+                continue
             zout.writestr(name, data)
 
-    with zipfile.ZipFile(project_3mf, "w", compression=zipfile.ZIP_DEFLATED) as zproj:
+    with zipfile.ZipFile(project_3mf, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zproj:
         for name, data in items.items():
             if name.endswith(".gcode") or name.endswith(".gcode.md5"):
                 continue
@@ -224,6 +274,76 @@ def upload_via_ftps(printer_ip, access_code, local_filepath):
     print("  -> On your A1 Mini touchscreen, tap 'Print Files' to start printing immediately.")
 
 
+def start_print_via_mqtt(printer_ip, access_code, serial, local_filepath, use_ams=False):
+    """Triggers a print job on the Bambu Lab A1 Mini over local MQTT TLS (port 8883)."""
+    remote_filename = os.path.basename(local_filepath)
+    subtask_name = os.path.splitext(os.path.splitext(remote_filename)[0])[0]
+    md5_hex = hashlib.md5(open(local_filepath, "rb").read()).hexdigest()
+
+    def enc_len(length):
+        out = bytearray()
+        while True:
+            byte = length % 128
+            length //= 128
+            if length > 0:
+                byte |= 0x80
+            out.append(byte)
+            if length == 0:
+                break
+        return bytes(out)
+
+    def enc_str(s):
+        b = s.encode("utf-8")
+        return struct.pack(">H", len(b)) + b
+
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    raw_sock = socket.create_connection((printer_ip, 8883), timeout=10)
+    sock = ctx.wrap_socket(raw_sock, server_hostname=printer_ip)
+
+    var_hdr = enc_str("MQTT") + bytes([4, 0xC2, 0, 60])
+    payload = enc_str("agy_print_starter") + enc_str("bblp") + enc_str(access_code)
+    sock.sendall(bytes([0x10]) + enc_len(len(var_hdr) + len(payload)) + var_hdr + payload)
+    sock.recv(4)
+
+    sub_payload = struct.pack(">H", 1) + enc_str(f"device/{serial}/report") + bytes([0])
+    sock.sendall(bytes([0x82]) + enc_len(len(sub_payload)) + sub_payload)
+    sock.recv(5)
+
+    req_topic = f"device/{serial}/request"
+    cmd_payload = {
+        "print": {
+            "sequence_id": str(int(time.time()) % 100000),
+            "command": "project_file",
+            "param": "Metadata/plate_1.gcode",
+            "project_id": "0",
+            "profile_id": "0",
+            "task_id": "0",
+            "subtask_id": "0",
+            "subtask_name": subtask_name,
+            "file": "",
+            "url": f"file:///sdcard/{remote_filename}",
+            "md5": md5_hex,
+            "timelapse": False,
+            "bed_type": "auto",
+            "bed_levelling": True,
+            "flow_cali": False,
+            "vibration_cali": False,
+            "layer_inspect": False,
+            "ams_mapping": [0] if use_ams else [254],
+            "use_ams": bool(use_ams),
+        }
+    }
+    req_json = json.dumps(cmd_payload).encode("utf-8")
+    pub_pkt = enc_str(req_topic) + req_json
+    sock.sendall(bytes([0x30]) + enc_len(len(pub_pkt)) + pub_pkt)
+    time.sleep(1.5)
+    sock.close()
+    print(f"  -> Sent MQTT 'project_file' print start command for '{remote_filename}' (use_ams={use_ams})!")
+
+
 def main():
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     default_model_dir = os.path.join(repo_root, "craftsman_v20_vacuum_mount")
@@ -231,16 +351,27 @@ def main():
     parser = argparse.ArgumentParser(description="Build, slice, and deploy any 3D model to Bambu Lab A1 Mini")
     parser.add_argument("--model-dir", default=default_model_dir, help="Path to the model folder (default: craftsman_v20_vacuum_mount)")
     parser.add_argument("--stl", default=None, help="Specific .stl file to slice (auto-detected from --model-dir if omitted)")
-    parser.add_argument("--ip", default=os.environ.get("BAMBU_IP"), help="A1 Mini LAN IP address")
-    parser.add_argument("--access-code", default=os.environ.get("BAMBU_ACCESS_CODE"), help="A1 Mini 8-digit access code")
-    parser.add_argument("--filament", default=os.environ.get("BAMBU_FILAMENT", "PLA"), choices=["PLA", "PETG", "pla", "petg"], help="Filament preset (PLA or PETG)")
+    parser.add_argument("--ip", default=os.environ.get("BAMBU_IP", "192.168.1.191"), help="A1 Mini LAN IP address")
+    parser.add_argument("--access-code", default=os.environ.get("BAMBU_ACCESS_CODE", "76646398"), help="A1 Mini 8-digit access code")
+    parser.add_argument("--serial", default=os.environ.get("BAMBU_SERIAL", "0309CA491801315"), help="A1 Mini serial number")
+    parser.add_argument("--filament", default=os.environ.get("BAMBU_FILAMENT", "PLA"), choices=["PLA", "PETG", "TPU", "pla", "petg", "tpu"], help="Filament preset (PLA, PETG, or TPU)")
     parser.add_argument("--supports", action="store_true", help="Enable breakaway supports and 5mm outer brim")
     parser.add_argument("--slice-only", action="store_true", help="Build and slice locally without uploading to printer")
+    parser.add_argument("--print-now", action="store_true", help="Start printing via MQTT after uploading")
+    parser.add_argument("--print-only", action="store_true", help="Start printing already-uploaded .gcode.3mf via MQTT without re-uploading")
     args = parser.parse_args()
 
     model_dir = os.path.abspath(args.model_dir)
     appimage_path = "/home/droid/BambuStudio.AppImage"
     use_supports = args.supports or ("jumping_spider" in os.path.basename(model_dir))
+    use_ams = args.filament.upper() != "TPU"
+
+    if args.print_only:
+        gcodes = sorted(glob.glob(os.path.join(model_dir, "*.gcode.3mf")))
+        if not gcodes:
+            raise FileNotFoundError(f"No .gcode.3mf found in {model_dir}")
+        start_print_via_mqtt(args.ip, args.access_code, args.serial, gcodes[0], use_ams=use_ams)
+        return
 
     sliced_3mf = build_and_slice(model_dir, args.stl, appimage_path, args.filament, enable_supports=use_supports)
 
@@ -252,6 +383,8 @@ def main():
         return
 
     upload_via_ftps(args.ip, args.access_code, sliced_3mf)
+    if args.print_now:
+        start_print_via_mqtt(args.ip, args.access_code, args.serial, sliced_3mf, use_ams=use_ams)
 
 
 if __name__ == "__main__":

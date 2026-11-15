@@ -8,6 +8,7 @@ Collection of custom parametric 3D-printable models, OpenSCAD sources, and Bambu
 | :--- | :--- | :--- |
 | **Craftsman V20 Handheld Vacuum Wall Mount (`CMCVH001B`)** | [`craftsman_v20_vacuum_mount/`](craftsman_v20_vacuum_mount/) | Two-arm wall cradle with recessed inner ledges and retention hooks for the Craftsman V20 cordless handheld vacuum. |
 | **Tiny Jumping Spider (*Salticidae*)** | [`tiny_jumping_spider/`](tiny_jumping_spider/) | Cute miniature jumping spider with 8 sculpted eyes, fuzzy pedipalps, dorsal abdomen chevrons, and 8 round articulated legs. |
+| **LARQ Bottle PureVis 2 (`23 oz`) Star Trek Delta Mesh Boot** | [`larq2_star_trek_boot/`](larq2_star_trek_boot/) | Flexible TPU protective bottle sleeve (`74.6 mm` ID × `85.0 mm` tall) with `54` interlocking Starfleet Delta cutouts, underside Delta vents, and central air-escape hole for the Bambu Lab A1 Mini. |
 
 ## Shared Scripts & Documentation
 

@@ -156,7 +156,7 @@ def capture_camera_snapshot(host, access_code, filepath="/tmp/camera_snapshot.jp
 def main():
     parser = argparse.ArgumentParser(description="Check Bambu Lab A1 Mini print status and push camera snapshot to ntfy.sh")
     parser.add_argument("--ip", default=os.environ.get("BAMBU_IP", "192.168.1.191"), help="A1 Mini LAN IP address")
-    parser.add_argument("--access-code", default=os.environ.get("BAMBU_ACCESS_CODE", "13929394"), help="A1 Mini 8-digit access code")
+    parser.add_argument("--access-code", default=os.environ.get("BAMBU_ACCESS_CODE", "76646398"), help="A1 Mini 8-digit access code")
     parser.add_argument("--serial", default=os.environ.get("BAMBU_SERIAL", "0309CA491801315"), help="A1 Mini serial number")
     parser.add_argument("--ntfy-topic", default=os.environ.get("NTFY_TOPIC", "cwashcraft-a1mini"), help="ntfy.sh topic name")
     parser.add_argument("--snapshot-out", default="/home/droid/camera_snapshot.jpg", help="Output path for captured JPEG frame")
