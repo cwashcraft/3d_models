@@ -99,8 +99,8 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
         tray_idx = "GFU01"
         fil_type = "TPU"
     else:
-        fil_name = "Bambu PLA Matte @BBL A1M"
-        tray_idx = "GFA01"
+        fil_name = "Bambu PLA Basic @BBL A1M"
+        tray_idx = "GFA00"
         fil_type = "PLA"
 
     filament = resolve_preset("filament", fil_name)
@@ -142,6 +142,42 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
         filament["nozzle_temperature"] = ["215"]
         filament["nozzle_temperature_initial_layer"] = ["220"]
         filament["filament_max_volumetric_speed"] = ["3.2"]
+    elif fil_type == "PLA":
+        # Anti-stringing & anti-melting optimizations for Bambu PLA Basic multi-part / small-feature prints (e.g. 4x keycaps):
+        # 1. Lower nozzle temperature from 220C -> 200C (210C initial layer) to stop PLA Basic oozing/stringing/melting
+        filament["nozzle_temperature"] = ["200"]
+        filament["nozzle_temperature_initial_layer"] = ["210"]
+        filament["filament_max_volumetric_speed"] = ["12"]
+        # 2. Avoid crossing walls and disable Z-hop so travel between the 4 keycaps + MX stems doesn't pull strings
+        process["reduce_crossing_wall"] = "1"
+        process["max_travel_detour_distance"] = "100%"
+        process["seam_position"] = "nearest"
+        machine["z_hop"] = ["0"]
+        machine["z_hop_types"] = ["Normal Lift"]
+        filament["filament_z_hop"] = ["0"]
+        filament["filament_z_hop_types"] = ["Normal Lift"]
+        # 3. Stronger retraction (1.0 mm @ 40 mm/s) + 70% pre-wipe retraction + 0.8 mm min travel
+        machine["retraction_length"] = ["1.0"]
+        machine["retraction_speed"] = ["40"]
+        machine["deretraction_speed"] = ["30"]
+        machine["retract_before_wipe"] = ["70%"]
+        machine["wipe"] = ["1"]
+        machine["wipe_distance"] = ["2"]
+        machine["retraction_minimum_travel"] = ["0.8"]
+        filament["filament_retraction_length"] = ["1.0"]
+        filament["filament_retraction_speed"] = ["40"]
+        filament["filament_deretraction_speed"] = ["30"]
+        filament["filament_retract_before_wipe"] = ["70%"]
+        filament["filament_wipe"] = ["1"]
+        filament["filament_wipe_distance"] = ["2"]
+        filament["filament_retraction_minimum_travel"] = ["0.8"]
+        # 4. Enforce 100% part cooling fan & 12s minimum layer time so small keycap rims/icons never overheat or melt
+        filament["fan_max_speed"] = ["100"]
+        filament["fan_min_speed"] = ["100"]
+        filament["overhang_fan_speed"] = ["100"]
+        filament["Close_fan_the_first_x_layers"] = ["1"]
+        filament["slow_down_layer_time"] = ["12"]
+        filament["slow_down_min_speed"] = ["15"]
 
     m_path = os.path.join(tmp_dir, "machine.json")
     p_path = os.path.join(tmp_dir, "process.json")
