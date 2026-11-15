@@ -105,7 +105,8 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
 
     filament = resolve_preset("filament", fil_name)
     filament["filament_settings_id"] = [fil_name]
-    filament["filament_colour"] = ["#1E1E20" if fil_type == "TPU" else "#8E9089"]
+    filament["filament_colour"] = ["#1E1E20" if fil_type == "TPU" else "#F2F4F8"]
+    process["wall_generator"] = "arachne"
 
     if fil_type == "TPU":
         # Anti-stringing TPU optimizations for lattice/mesh geometry on A1 mini:
@@ -155,7 +156,44 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA", enable_supports=
     return tmp_dir, m_path, p_path, f_path, fil_name, tray_idx, fil_type
 
 
-def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA", enable_supports=False):
+def inject_pause_at_z(gcode_str, pause_z):
+    """
+    Injects a Bambu Lab filament-change pause (M400 U1) at the first layer change
+    whose Z_HEIGHT is >= pause_z (within 0.05 mm tolerance).
+    """
+    lines = gcode_str.splitlines(keepends=True)
+    out = []
+    injected = False
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        out.append(line)
+        if not injected and line.startswith("; CHANGE_LAYER"):
+            # Look ahead a few lines for ; Z_HEIGHT: <val>
+            for j in range(i + 1, min(i + 6, n)):
+                if lines[j].startswith("; Z_HEIGHT:"):
+                    try:
+                        z_val = float(lines[j].split(":")[1].strip())
+                        if z_val >= pause_z - 0.04:
+                            # Copy up to and including the Z_HEIGHT and LAYER_HEIGHT lines
+                            while i < j:
+                                i += 1
+                                out.append(lines[i])
+                            if i + 1 < n and lines[i + 1].startswith("; LAYER_HEIGHT:"):
+                                i += 1
+                                out.append(lines[i])
+                            out.append(f"; === AUTO FILAMENT CHANGE PAUSE AT Z = {z_val:.2f} mm (2-Tone Swap) ===\n")
+                            out.append("M400 U1\n")
+                            injected = True
+                    except ValueError:
+                        pass
+                    break
+        i += 1
+    return "".join(out), injected
+
+
+def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA", enable_supports=False, pause_z=None):
     # Check if a generator script (generate_*.py) exists in model_dir
     gen_scripts = sorted(glob.glob(os.path.join(model_dir, "generate_*.py")))
     existing_stls = sorted(glob.glob(os.path.join(model_dir, "*.stl")))
@@ -233,6 +271,17 @@ def build_and_slice(model_dir, stl_file, appimage_path, filament_choice="PLA", e
     s_info = items["Metadata/slice_info.config"].decode("utf-8")
     s_info = s_info.replace('key="printer_model_id" value=""', 'key="printer_model_id" value="N1"')
     items["Metadata/slice_info.config"] = s_info.encode("utf-8")
+
+    if pause_z is not None and "Metadata/plate_1.gcode" in items:
+        gcode_str = items["Metadata/plate_1.gcode"].decode("utf-8", errors="replace")
+        new_gcode_str, injected = inject_pause_at_z(gcode_str, pause_z)
+        if injected:
+            new_gcode_bytes = new_gcode_str.encode("utf-8")
+            items["Metadata/plate_1.gcode"] = new_gcode_bytes
+            items["Metadata/plate_1.gcode.md5"] = hashlib.md5(new_gcode_bytes).hexdigest().encode("utf-8")
+            print(f"  -> Injected automatic filament-swap pause (M400 U1) at Z = {pause_z:.2f} mm!")
+        else:
+            print(f"  -> [Warning] Could not find layer change at Z >= {pause_z:.2f} mm for pause injection.")
 
     with zipfile.ZipFile(sliced_3mf, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zout:
         for name, data in items.items():
@@ -356,6 +405,7 @@ def main():
     parser.add_argument("--serial", default=os.environ.get("BAMBU_SERIAL", "0309CA491801315"), help="A1 Mini serial number")
     parser.add_argument("--filament", default=os.environ.get("BAMBU_FILAMENT", "PLA"), choices=["PLA", "PETG", "TPU", "pla", "petg", "tpu"], help="Filament preset (PLA, PETG, or TPU)")
     parser.add_argument("--supports", action="store_true", help="Enable breakaway supports and 5mm outer brim")
+    parser.add_argument("--pause-z", type=float, default=None, help="Inject automatic M400 U1 filament-swap pause at the specified Z height (mm)")
     parser.add_argument("--slice-only", action="store_true", help="Build and slice locally without uploading to printer")
     parser.add_argument("--print-now", action="store_true", help="Start printing via MQTT after uploading")
     parser.add_argument("--print-only", action="store_true", help="Start printing already-uploaded .gcode.3mf via MQTT without re-uploading")
@@ -364,7 +414,10 @@ def main():
     model_dir = os.path.abspath(args.model_dir)
     appimage_path = "/home/droid/BambuStudio.AppImage"
     use_supports = args.supports or ("jumping_spider" in os.path.basename(model_dir))
-    use_ams = args.filament.upper() != "TPU"
+    pause_z = args.pause_z
+    if pause_z is None and "keycap" in os.path.basename(model_dir):
+        pause_z = 10.20
+    use_ams = (args.filament.upper() != "TPU") and (pause_z is None)
 
     if args.print_only:
         gcodes = sorted(glob.glob(os.path.join(model_dir, "*.gcode.3mf")))
@@ -373,7 +426,9 @@ def main():
         start_print_via_mqtt(args.ip, args.access_code, args.serial, gcodes[0], use_ams=use_ams)
         return
 
-    sliced_3mf = build_and_slice(model_dir, args.stl, appimage_path, args.filament, enable_supports=use_supports)
+    sliced_3mf = build_and_slice(
+        model_dir, args.stl, appimage_path, args.filament, enable_supports=use_supports, pause_z=pause_z
+    )
 
     if args.slice_only or not args.ip or not args.access_code:
         if not args.slice_only:
