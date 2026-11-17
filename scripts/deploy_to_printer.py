@@ -60,15 +60,7 @@ def resolve_bambu_presets(appimage_path, filament_choice="PLA"):
     machine = resolve_preset("machine", "Bambu Lab A1 mini 0.4 nozzle")
     machine["printer_settings_id"] = "Bambu Lab A1 mini 0.4 nozzle"
     machine["curr_bed_type"] = "Textured PEI Plate"
-
-    process = resolve_preset("process", "0.20mm Strength @BBL A1M")
-    process["print_settings_id"] = "0.20mm Strength @BBL A1M"
-    process["curr_bed_type"] = "Textured PEI Plate"
-    process["wall_loops"] = "4"
-    process["sparse_infill_density"] = "25%"
-    process["sparse_infill_pattern"] = "gyroid"
-    process["enable_support"] = "0"
-
+    
     if filament_choice.upper() == "PETG":
         fil_name = "Bambu PETG Basic @BBL A1M 0.4 nozzle"
         tray_idx = "GFG00"
